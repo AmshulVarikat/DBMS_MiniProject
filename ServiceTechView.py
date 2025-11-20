@@ -51,7 +51,12 @@ def get_job_details(job_id):
         c.Customer_ID,
         c.Name as Customer_Name,
         c.Phone_no,
-        c.email_ID
+        c.email_ID,
+        (
+            SELECT COALESCE(SUM(p.Quantity * p.Price), 0)
+            FROM parts p
+            WHERE p.JobID = sj.Service_ID
+        ) AS Total_Parts_Cost
     FROM Service_Job sj
     JOIN vehicle v ON sj.Reg_No = v.Reg_No
     JOIN customers c ON v.CustomerID = c.Customer_ID
