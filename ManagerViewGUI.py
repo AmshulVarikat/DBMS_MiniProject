@@ -5,7 +5,8 @@ from ManagerView import (
     get_all_technicians,
     get_all_customer_reps,
     delete_technician,
-    delete_customer_rep
+    delete_customer_rep,
+    get_techs_by_part  # Imported new function
 )
 
 class ManagerViewGUI(ctk.CTkFrame):
@@ -23,12 +24,18 @@ class ManagerViewGUI(ctk.CTkFrame):
         btn_frame = ctk.CTkFrame(self)
         btn_frame.pack(pady=10)
 
+        # Row 1
         ctk.CTkButton(btn_frame, text="Add Technician", command=self.add_technician).grid(row=0, column=0, padx=5, pady=5)
         ctk.CTkButton(btn_frame, text="Add Customer Rep", command=self.add_customer_rep).grid(row=0, column=1, padx=5, pady=5)
         ctk.CTkButton(btn_frame, text="View Technicians", command=self.show_technicians).grid(row=0, column=2, padx=5, pady=5)
         ctk.CTkButton(btn_frame, text="View Customer Reps", command=self.show_customer_reps).grid(row=0, column=3, padx=5, pady=5)
+        
+        # Row 2
         ctk.CTkButton(btn_frame, text="Delete Technician", command=self.delete_tech_popup).grid(row=1, column=0, padx=5, pady=5)
         ctk.CTkButton(btn_frame, text="Delete Customer Rep", command=self.delete_rep_popup).grid(row=1, column=1, padx=5, pady=5)
+        
+        # Row 2 - New Button for Nested Query Feature
+        ctk.CTkButton(btn_frame, text="Find Techs by Part Used", command=self.find_techs_by_part_popup, fg_color="#E67E22", hover_color="#D35400").grid(row=1, column=2, padx=5, pady=5)
 
         # Output Section
         self.output = ctk.CTkTextbox(self, width=900, height=450)
@@ -255,3 +262,43 @@ class ManagerViewGUI(ctk.CTkFrame):
                 popup.destroy()
 
         ctk.CTkButton(popup, text="Delete", command=submit, fg_color="red", hover_color="darkred").pack(pady=15)
+
+    def find_techs_by_part_popup(self):
+        """Popup to find technicians by part number (Nested Query Feature)"""
+        popup = ctk.CTkToplevel(self)
+        popup.title("Find Technicians by Part")
+        popup.geometry("450x200")
+
+        ctk.CTkLabel(popup, text="Enter Part Number:", font=("", 14)).pack(pady=10)
+        ctk.CTkLabel(popup, text="(e.g. P001, P002)", text_color="gray").pack()
+        
+        part_entry = ctk.CTkEntry(popup, width=300)
+        part_entry.pack(pady=5)
+
+        def submit():
+            part_no = part_entry.get().strip()
+            
+            if not part_no:
+                self.output.delete("1.0", "end")
+                self.output.insert("end", "Error: Part Number is required!\n")
+                return
+
+            try:
+                results = get_techs_by_part(part_no)
+                
+                popup.destroy()
+                self.output.delete("1.0", "end")
+                
+                if results:
+                    self.output.insert("end", f"=== TECHNICIANS WHO USED PART: {part_no} ===\n\n")
+                    for r in results:
+                        self.output.insert("end", f"ID: {r['technician_ID']} | Name: {r['Fname']} {r['Name']}\n")
+                else:
+                    self.output.insert("end", f"No technicians found who used part {part_no}.\n")
+
+            except Exception as e:
+                self.output.delete("1.0", "end")
+                self.output.insert("end", f"Error: {str(e)}\n")
+                popup.destroy()
+
+        ctk.CTkButton(popup, text="Search", command=submit).pack(pady=15)

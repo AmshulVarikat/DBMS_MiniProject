@@ -133,3 +133,31 @@ def delete_customer_rep(emp_id):
             
     except Exception as e:
         return False, f"Error: {str(e)}"
+
+def get_techs_by_part(part_no):
+    """
+    Get technicians who worked on jobs using a specific part (Nested Query)
+    """
+    query = """
+    SELECT 
+        st.technician_ID, 
+        st.Fname, 
+        st.Name
+    FROM service_technician st
+    WHERE st.technician_ID IN (
+        SELECT db.TechID
+        FROM Done_By db
+        WHERE db.JobID IN (
+            SELECT p.JobID
+            FROM parts p
+            WHERE p.Part_No = %s
+        )
+    )
+    """
+    
+    try:
+        results = run_query(query, (part_no,), fetch=True)
+        return results if results else []
+    except Exception as e:
+        print(f"Error fetching techs by part: {e}")
+        return []
