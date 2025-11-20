@@ -167,11 +167,12 @@ class ServiceTechViewGUI(ctk.CTkFrame):
                 # Parts
                 self.output.insert("end", "PARTS USED:\n")
                 if parts:
-                    total_parts_cost = 0
                     for part in parts:
                         self.output.insert("end", f"  Part No: {part['Part_No']} | Qty: {part['Quantity']} | Price: ${part['Price']} | Total: ${part['Total']}\n")
-                        total_parts_cost += part['Total']
-                    self.output.insert("end", f"\n  Total Parts Cost: ${total_parts_cost}\n")
+                    
+                    # --- UPDATED: Using the nested query result directly ---
+                    total_cost = details.get('Total_Parts_Cost', 0)
+                    self.output.insert("end", f"\n  Total Parts Cost: ${total_cost}\n")
                 else:
                     self.output.insert("end", "  No parts recorded.\n")
 
